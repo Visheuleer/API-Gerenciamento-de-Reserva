@@ -9,11 +9,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 
 @RestController
@@ -34,5 +34,32 @@ public class ReservationController {
         var reservationModel = new ReservationModel();
         BeanUtils.copyProperties(reservationRecordDto, reservationModel);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationRepository.save(reservationModel));
+    }
+
+    @GetMapping("/reservations")
+    public ResponseEntity<List<ReservationModel>> getAllReservations(){
+        return ResponseEntity.status(HttpStatus.OK).body(reservationRepository.findAll());
+    }
+
+    @GetMapping("/reservations/{id}")
+    public ResponseEntity<?> getOneReservation(@PathVariable(value = "id") UUID id){
+        Optional<ReservationModel> reservation = reservationRepository.findById(id);
+        if(reservation.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Reserva não encontrada."));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(reservation.get());
+    }
+
+    @PutMapping("/reservations/{id}")
+    public ResponseEntity<?> putReservation(@PathVariable(value = "id") UUID id,
+                                            @RequestBody @Valid ReservationRecordDto reservationRecordDto){
+
+        Optional<ReservationModel> reservation = reservationRepository.findById(id);
+        if(reservation.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Reserva não encontrada."));
+        }
+        var reservationModel = new ReservationModel();
+        BeanUtils.copyProperties(reservationRecordDto, reservationModel);
+        return ResponseEntity.status(HttpStatus.OK).body(reservationRepository.save(reservationModel));
     }
 }
